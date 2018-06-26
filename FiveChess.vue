@@ -30,16 +30,18 @@
     }
 
     class Map {
-        constructor(size, step) {
+        constructor(size, step, margin) {
+            this.margin = margin;
+            this.step = step;
             this.size = size;
             let arr = [];
             for (let i = 0; i <= size; i++) {
                 arr[i] = [];
                 for (let j = 0; j <= size; j++) {
                     arr[i][j] = {
-                        x: i, // x轴坐标
-                        y: j * step, // y轴坐标
-                        type: 'none' // 状态（white,black,none）
+                        x: (i * step) + margin, // x轴坐标
+                        y: (j * step) + margin, // y轴坐标
+                        type: '0' // 状态（f,0,none）
                     }
                 }
             }
@@ -47,7 +49,18 @@
         }
 
         placeChess(i, j, type) {
-            this.arr[i][j].type = type
+            let xPos = parseInt(i / this.step);
+            let xFlo = 0;
+            if (i % this.step - this.step > 0) {
+                xFlo = 1;
+            }
+            let yPos = parseInt(j / this.step);
+            let yFlo = 0;
+            if (j % this.step - this.step > 0) {
+                yFlo = 1;
+            }
+            this.arr[xPos + xFlo][yPos + yFlo].type = type
+            return this.arr[xPos + xFlo][yPos + yFlo]
         }
 
         hasChess() {
@@ -85,40 +98,42 @@
                 ctx: null,
                 step: 30,
                 lenStep: 14,
+                margin: 10,
                 map: []
             }
         },
         methods: {
             DrawChessBoard() { // 绘制棋盘
-                let {ctx, step, lenStep} = this;
+                let {ctx, step, lenStep, margin} = this;
                 console.log('ctx', ctx)
                 ctx.strokeStyle = '#ee5566';
                 for (let i = 0; i <= lenStep; i++) {
                     // draw rows
-                    ctx.moveTo(0, i * step)
-                    ctx.lineTo(lenStep * step, i * step)
+                    ctx.moveTo(margin, (i * step) + margin)
+                    ctx.lineTo((lenStep * step) + margin, (i * step) + margin)
                     // draw cols
-                    ctx.moveTo(i * step, 0)
-                    ctx.lineTo(i * step, lenStep * step)
+                    ctx.moveTo((i * step) + margin, margin)
+                    ctx.lineTo((i * step) + margin, (lenStep * step) + margin)
                 }
                 ctx.stroke();
                 ctx.closePath();
                 // 标注圆心
                 ctx.beginPath();
                 ctx.fillStyle = '#000';
-                ctx.arc(lenStep / 2 * step, lenStep / 2 * step, 4, 0, 2 * Math.PI);
+                ctx.arc((lenStep / 2 * step) + margin, (lenStep / 2 * step) + margin, 4, 0, 2 * Math.PI);
                 ctx.fill();
             },
             moveChess(event) {
                 let x = event.offsetX;
                 let y = event.offsetY;
-                new Chess(this.ctx, '0').moveStep(x, y)
+                let userObj = this.map.placeChess(x, y, '0');
+                new Chess(this.ctx, '0').moveStep(userObj.x, userObj.y)
             }
         },
         mounted() {
             this.ctx = document.getElementById('FiveChessCanvas').getContext('2d');
             this.DrawChessBoard()
-            this.map = new Map(this.lenStep, this.step)
+            this.map = new Map(this.lenStep, this.step, this.margin)
         }
     }
 </script>
